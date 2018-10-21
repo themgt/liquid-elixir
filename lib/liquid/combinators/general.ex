@@ -312,7 +312,8 @@ defmodule Liquid.Combinators.General do
   end
 
   def filters do
-    times(parsec(:filter), min: 1)
+    filter()
+    |> times(min: 1)
     |> tag(:filters)
   end
 
