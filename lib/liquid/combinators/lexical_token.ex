@@ -15,112 +15,89 @@ defmodule Liquid.Combinators.LexicalToken do
   @type value :: number() | boolean() | nil | String.t() | Range.t() | variable_value()
 
   # NegativeSign :: -
-  def negative_sign, do: ascii_char([?-])
+  @negative_sign ascii_char([?-])
 
   # Digit :: one of 0 1 2 3 4 5 6 7 8 9
-  def digit, do: ascii_char([?0..?9])
+  @digit ascii_char([?0..?9])
 
   # NonZeroDigit :: Digit but not `0`
-  def non_zero_digit, do: ascii_char([?1..?9])
+  @non_zero_digit ascii_char([?1..?9])
 
   # IntegerPart ::
   #   - NegativeSign? 0
   #   - NegativeSign? NonZeroDigit Digit*
-  def integer_part do
-    empty()
-    |> optional(negative_sign())
-    |> choice([
-      ascii_char([?0]),
-      non_zero_digit() |> repeat(digit())
-    ])
-  end
+  @integer_part empty()
+                |> optional(@negative_sign)
+                |> choice([
+                  ascii_char([?0]),
+                  @non_zero_digit |> repeat(@digit)
+                ])
 
   # IntValue :: IntegerPart
-  def integer_value do
-    integer_part()
-    |> reduce({List, :to_integer, []})
-  end
+  @integer_value reduce(@integer_part, {List, :to_integer, []})
 
   # FractionalPart :: . Digit+
-  def fractional_part do
-    empty()
-    |> ascii_char([?.])
-    |> times(digit(), min: 1)
-  end
+  @fractional_part empty()
+                   |> ascii_char([?.])
+                   |> times(@digit, min: 1)
 
   # ExponentIndicator :: one of `e` `E`
-  def exponent_indicator, do: ascii_char([?e, ?E])
+  @exponent_indicator ascii_char([?e, ?E])
 
   # Sign :: one of + -
-  def sign, do: ascii_char([?+, ?-])
+  @sign ascii_char([?+, ?-])
 
   # ExponentPart :: ExponentIndicator Sign? Digit+
-  def exponent_part do
-    exponent_indicator()
-    |> optional(sign())
-    |> times(digit(), min: 1)
-  end
+  @exponent_part @exponent_indicator
+                 |> optional(@sign)
+                 |> times(@digit, min: 1)
 
   # FloatValue ::
   #   - IntegerPart FractionalPart
   #   - IntegerPart ExponentPart
   #   - IntegerPart FractionalPart ExponentPart
-  def float_value do
-    empty()
-    |> choice([
-      integer_part() |> concat(fractional_part()) |> concat(exponent_part()),
-      integer_part() |> concat(fractional_part())
-    ])
-    |> reduce({List, :to_float, []})
-  end
+  @float_value empty()
+               |> choice([
+                 @integer_part |> concat(@fractional_part) |> concat(@exponent_part),
+                 @integer_part |> concat(@fractional_part)
+               ])
+               |> reduce({List, :to_float, []})
 
-  defp double_quoted_string do
-    empty()
-    |> ignore(ascii_char([?"]))
-    |> repeat_until(utf8_char([]), [utf8_char([?"])])
-    |> ignore(ascii_char([?"]))
-  end
+  @double_quoted_string empty()
+                        |> ignore(ascii_char([?"]))
+                        |> repeat_until(utf8_char([]), [ascii_char([?"])])
+                        |> ignore(ascii_char([?"]))
 
-  def quoted_string do
-    empty()
-    |> ignore(ascii_char([?']))
-    |> repeat_until(utf8_char([]), [utf8_char([?'])])
-    |> ignore(ascii_char([?']))
-  end
+  @quoted_string empty()
+                 |> ignore(ascii_char([?']))
+                 |> repeat_until(utf8_char([]), [ascii_char([?'])])
+                 |> ignore(ascii_char([?']))
 
   # StringValue ::
   #   - `"` StringCharacter* `"`
   #   - `'` StringCharacter* `'`
-  def string_value do
-    empty()
-    |> choice([double_quoted_string(), quoted_string()])
-    |> reduce({List, :to_string, []})
-  end
+  @string_value empty()
+                |> choice([@double_quoted_string, @quoted_string])
+                |> reduce({List, :to_string, []})
 
   # BooleanValue : one of `true` `false`
-  def boolean_value do
-    empty()
-    |> choice([
-      string("true"),
-      string("false")
-    ])
-    |> traverse({Liquid.Combinators.General, :to_atom, []})
-  end
+  @boolean_value empty()
+                 |> choice([
+                   string("true"),
+                   string("false")
+                 ])
+                 |> map({String, :to_atom, []})
 
   # NullValue : `nil`
-  def null_value do
-    parsec(:ignore_whitespaces)
-    |> choice([string("nil"), string("null"), string("NIL"), string("NULL")])
-    |> replace(nil)
-  end
+  @null_value replace(choice([string("nil"), string("null"), string("NIL"), string("NULL")]), nil)
 
   def number do
-    choice([float_value(), integer_value()])
+    choice([@float_value, @integer_value])
   end
 
   defp range_limit(combinator \\ empty(), tag_name) do
     combinator
-    |> choice([integer_value(), variable_value()])
+    |> choice([@integer_value, variable_value()])
     |> unwrap_and_tag(tag_name)
   end
 
@@ -146,9 +123,9 @@ defmodule Liquid.Combinators.LexicalToken do
     parsec(:ignore_whitespaces)
     |> choice([
       number(),
-      boolean_value(),
-      null_value(),
-      string_value(),
+      @boolean_value,
+      @null_value,
+      @string_value,
       range_value(),
       variable_value()
     ])
@@ -184,8 +161,8 @@ defmodule Liquid.Combinators.LexicalToken do
 
   defp list_definition do
     choice([
-      integer_value(),
-      string_value(),
+      @integer_value,
+      @string_value,
       parsec(:variable_value)
     ])
   end
