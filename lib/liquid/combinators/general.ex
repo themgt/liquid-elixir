@@ -262,11 +262,11 @@ defmodule Liquid.Combinators.General do
   end
 
   def quoted_variable_name do
-    parsec(:ignore_whitespaces)
+    ignore_whitespaces()
     |> ignore(utf8_char([@single_quote]))
     |> parsec(:variable_definition)
     |> ignore(utf8_char([@single_quote]))
-    |> parsec(:ignore_whitespaces)
+    |> concat(ignore_whitespaces())
     |> unwrap_and_tag(:variable_name)
   end
 
@@ -291,21 +291,21 @@ defmodule Liquid.Combinators.General do
   end
 
   def single_quoted_token do
-    parsec(:ignore_whitespaces)
+    ignore_whitespaces()
     |> concat(utf8_char([@single_quote]))
     |> concat(repeat(utf8_char(not: @comma, not: @single_quote)))
     |> concat(utf8_char([@single_quote]))
     |> reduce({List, :to_string, []})
-    |> concat(parsec(:ignore_whitespaces))
+    |> concat(ignore_whitespaces())
   end
 
   def double_quoted_token do
-    parsec(:ignore_whitespaces)
+    ignore_whitespaces()
     |> concat(utf8_char([@double_quote]))
     |> concat(repeat(utf8_char(not: @comma, not: @double_quote)))
     |> concat(utf8_char([@double_quote]))
     |> reduce({List, :to_string, []})
-    |> concat(parsec(:ignore_whitespaces))
+    |> concat(ignore_whitespaces())
   end
 
   def quoted_token do
@@ -319,10 +319,10 @@ defmodule Liquid.Combinators.General do
   def filter_param do
     empty()
     |> optional(ignore(utf8_char([@colon])))
-    |> parsec(:ignore_whitespaces)
+    |> concat(ignore_whitespaces())
     |> parsec(:value)
     |> optional(ignore(utf8_char([@comma])))
-    |> optional(parsec(:ignore_whitespaces))
+    |> optional(ignore_whitespaces())
     |> optional(parsec(:value))
     |> tag(:params)
   end
@@ -337,14 +337,14 @@ defmodule Liquid.Combinators.General do
   start char: ':' plus optional: parameters values [value]
   """
   def filter do
-    parsec(:ignore_whitespaces)
+    ignore_whitespaces()
     |> ignore(string(@start_filter))
-    |> parsec(:ignore_whitespaces)
+    |> concat(ignore_whitespaces())
     |> utf8_string(
       [not: @colon, not: @vertical_line, not: @rigth_curly_bracket, not: @space],
       min: 1
     )
-    |> parsec(:ignore_whitespaces)
+    |> concat(ignore_whitespaces())
     |> reduce({List, :to_string, []})
     |> optional(parsec(:filter_param))
     |> tag(:filter)
@@ -370,12 +370,12 @@ defmodule Liquid.Combinators.General do
 
   def tag_param(name) do
     empty()
-    |> parsec(:ignore_whitespaces)
+    |> concat(ignore_whitespaces())
     |> ignore(string(name))
     |> ignore(ascii_char([@colon]))
-    |> parsec(:ignore_whitespaces)
+    |> concat(ignore_whitespaces())
     |> choice([parsec(:number), parsec(:variable_definition)])
-    |> parsec(:ignore_whitespaces)
+    |> concat(ignore_whitespaces())
     |> tag(String.to_atom(name))
   end
 
