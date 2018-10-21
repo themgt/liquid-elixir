@@ -3,6 +3,7 @@ defmodule Liquid.Combinators.Tag do
   Helper to create tags
   """
   import NimbleParsec
+  alias Liquid.Combinators.General
 
   @doc """
   Define a block from a tag_name and, optionally, a function to parse tag parameters,
@@ -66,11 +67,10 @@ defmodule Liquid.Combinators.Tag do
   """
   @spec define_sub_block(binary(), list(), function()) :: function()
   def define_sub_block(tag_name, allowed_tags, combinator \\ & &1) do
-    empty()
-    |> parsec(:start_tag)
+    General.start_tag()
     |> ignore(string(tag_name))
     |> combinator.()
-    |> parsec(:end_tag)
+    |> concat(General.end_tag())
     |> tag(String.to_atom(tag_name))
     |> tag(:sub_block)
     |> traverse({__MODULE__, :check_allowed_tags, [allowed_tags]})
@@ -98,11 +98,10 @@ defmodule Liquid.Combinators.Tag do
   def open_tag(tag_name, combinator \\ & &1, separator \\ " ")
 
   def open_tag(tag_name, combinator, separator) do
-    empty()
-    |> parsec(:start_tag)
+    General.start_tag()
     |> ignore(string(tag_name <> separator))
     |> combinator.()
-    |> parsec(:end_tag)
+    |> concat(General.end_tag())
   end
 
   @doc """
@@ -112,9 +111,9 @@ defmodule Liquid.Combinators.Tag do
   @spec close_tag(function(), binary()) :: function()
   def close_tag(combinator \\ empty(), tag_name) do
     combinator
-    |> parsec(:start_tag)
+    |> concat(General.start_tag())
     |> ignore(string("end" <> tag_name))
-    |> parsec(:end_tag)
+    |> concat(General.end_tag())
   end
 
   def store_tag_in_context(_, [{:block, [{tag_name, _}]}] = acc, %{tags: tags} = context, _, _) do
