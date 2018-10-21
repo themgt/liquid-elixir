@@ -18,6 +18,7 @@ defmodule Liquid.Combinators.GeneralTest do
     defparsec(:filter, General.filter())
     defparsec(:filter_param, General.filter_param())
     defparsec(:filters, General.filters())
+    defparsec(:liquid_variable, General.liquid_variable())
     defparsec(:value, LexicalToken.value())
     defparsec(:value_definition, LexicalToken.value_definition())
     defparsec(:object_property, LexicalToken.object_property())
@@ -73,6 +74,31 @@ defmodule Liquid.Combinators.GeneralTest do
     Enum.each(invalid_names, fn n ->
       test_combinator_internal_error(n, &Parser.variable_name/1)
     end)
+  end
+
+  test "variable with filters and params" do
+    test_combinator(
+      "{{ var.var1[0][0].var2[3] | filter1 | f2: 1 | f3: 2 | f4: 2, 3 }}",
+      &Parser.liquid_variable/1,
+      liquid_variable: [
+        variable: [
+          parts: [
+            part: "var",
+            part: "var1",
+            index: 0,
+            index: 0,
+            part: "var2",
+            index: 3
+          ],
+          filters: [
+            filter: ["filter1"],
+            filter: ["f2", {:params, [value: 1]}],
+            filter: ["f3", {:params, [value: 2]}],
+            filter: ["f4", {:params, [value: 2, value: 3]}]
+          ]
+        ]
+      ]
+    )
   end
 
   defp test_combinator_internal_error(markup, combiner) do
