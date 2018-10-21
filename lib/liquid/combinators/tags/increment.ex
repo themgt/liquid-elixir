@@ -17,7 +17,7 @@ defmodule Liquid.Combinators.Tags.Increment do
   ```
   """
   import NimbleParsec
-  alias Liquid.Combinators.Tag
+  alias Liquid.Combinators.{Tag, LexicalToken}
 
   @type t :: [increment: Increment.markup()]
 
@@ -31,7 +31,7 @@ defmodule Liquid.Combinators.Tags.Increment do
   @spec tag() :: NimbleParsec.t()
   def tag do
     Tag.define_open("increment", fn combinator ->
-      parsec(combinator, :variable_value)
+      concat(combinator, LexicalToken.variable_value())
     end)
   end
 end
