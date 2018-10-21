@@ -160,7 +160,7 @@ defmodule Liquid.Combinators.General do
       string(@less_than),
       string("contains")
     ])
-    |> traverse({__MODULE__, :to_atom, []})
+    |> map({String, :to_atom, []})
   end
 
   @doc """
@@ -174,7 +174,7 @@ defmodule Liquid.Combinators.General do
       string("and"),
       string(",") |> replace("or")
     ])
-    |> traverse({__MODULE__, :to_atom, []})
+    |> map({String, :to_atom, []})
   end
 
   def condition do
@@ -350,12 +350,6 @@ defmodule Liquid.Combinators.General do
     |> tag(:filter)
     |> optional(parsec(:filter))
   end
-
-  @doc """
-  Helper for traverse combinator. Transforms first element in `acc` from string to atom
-  """
-  @spec to_atom(binary(), list(), list(), integer(), integer()) :: tuple()
-  def to_atom(_rest, [h | t], context, _line, _offset), do: {[String.to_atom(h) | t], context}
 
   @doc """
   Parse and ignore an assign symbol
