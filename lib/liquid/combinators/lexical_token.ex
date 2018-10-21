@@ -9,6 +9,7 @@ defmodule Liquid.Combinators.LexicalToken do
     - Object
   """
   import NimbleParsec
+  alias Liquid.Combinators.General
 
   @type variable_value ::
           {:variable, [parts: [part: String.t(), index: integer() | variable_value]]}
@@ -120,7 +121,7 @@ defmodule Liquid.Combinators.LexicalToken do
   #   - ListValue[?Const]
   #   - Variable
   def value_definition do
-    parsec(:ignore_whitespaces)
+    General.ignore_whitespaces()
     |> choice([
       number(),
       @boolean_value,
@@ -129,7 +130,7 @@ defmodule Liquid.Combinators.LexicalToken do
       range_value(),
       variable_value()
     ])
-    |> concat(parsec(:ignore_whitespaces))
+    |> concat(General.ignore_whitespaces())
   end
 
   def variable_value, do: tag(object_value(), :variable)
@@ -170,9 +171,9 @@ defmodule Liquid.Combinators.LexicalToken do
   defp list_index do
     string("[")
     |> ignore()
-    |> parsec(:ignore_whitespaces)
+    |> concat(General.ignore_whitespaces())
     |> concat(optional(list_definition()))
-    |> parsec(:ignore_whitespaces)
+    |> concat(General.ignore_whitespaces())
     |> ignore(string("]"))
     |> unwrap_and_tag(:index)
     |> optional(parsec(:object_property))
