@@ -343,7 +343,7 @@ defmodule Liquid.Combinators.General do
     empty()
     |> optional(cleaned_comma())
     |> parsec(:variable_name)
-    |> ignore(utf8_string([symbol], max: 1))
+    |> ignore(utf8_char([symbol]))
     |> parsec(:value)
   end
 
