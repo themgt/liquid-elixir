@@ -187,7 +187,7 @@ defmodule Liquid.Combinators.General do
   end
 
   def logical_condition do
-    parsec(:logical_operators)
+    logical_operators()
     |> choice([parsec(:condition), parsec(:value_definition)])
     |> tag(:logical)
   end
@@ -331,7 +331,7 @@ defmodule Liquid.Combinators.General do
     )
     |> concat(ignore_whitespaces())
     |> reduce({List, :to_string, []})
-    |> optional(parsec(:filter_param))
+    |> optional(filter_param())
     |> tag(:filter)
     |> optional(parsec(:filter))
   end
