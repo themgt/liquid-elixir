@@ -193,22 +193,6 @@ defmodule Liquid.Combinators.General do
   end
 
   @doc """
-  All utf8 valid characters or empty limited by start/end of tag/variable
-  """
-  def liquid_literal do
-    empty()
-    |> repeat_until(utf8_char([]), [
-      string(@start_variable),
-      string(@start_tag)
-    ])
-    |> reduce({List, :to_string, []})
-    |> traverse({Liquid.Combinators.General, :check_empty, []})
-  end
-
-  def check_empty(_rest, [""], _context, _line, _offset), do: {:error, "Not a valid literal"}
-  def check_empty(_rest, args, context, _line, _offset), do: {args, context}
-
-  @doc """
   All utf8 valid characters or empty limited by start of tag
   """
   def literal_until_tag do
