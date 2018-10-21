@@ -6,7 +6,6 @@ defmodule Liquid.Combinators.GeneralTest do
     import NimbleParsec
     alias Liquid.Combinators.{General, LexicalToken}
     defparsec(:whitespace, General.whitespace())
-    defparsec(:liquid_literal, General.liquid_literal())
     defparsec(:ignore_whitespaces, General.ignore_whitespaces())
     defparsec(:start_tag, General.start_tag())
     defparsec(:end_tag, General.end_tag())
@@ -32,18 +31,6 @@ defmodule Liquid.Combinators.GeneralTest do
     test_combinator("\t", &Parser.whitespace/1, '\t')
     test_combinator("\n", &Parser.whitespace/1, '\n')
     test_combinator("\r", &Parser.whitespace/1, '\r')
-  end
-
-  test "literal: every utf8 valid character until open/close tag/variable" do
-    test_combinator("Chinese: 你好, English: Whatever, Arabian: مرحبا", &Parser.liquid_literal/1, [
-      "Chinese: 你好, English: Whatever, Arabian: مرحبا"
-    ])
-
-    test_combinator("stop in {{", &Parser.liquid_literal/1, ["stop in "])
-    test_combinator("stop in {%", &Parser.liquid_literal/1, ["stop in "])
-    test_combinator("stop in %}", &Parser.liquid_literal/1, ["stop in %}"])
-    test_combinator("stop in }}", &Parser.liquid_literal/1, ["stop in }}"])
-    test_combinator_internal_error("{{ this is not processed", &Parser.liquid_literal/1)
   end
 
   test "extra_spaces ignore all :whitespaces" do
