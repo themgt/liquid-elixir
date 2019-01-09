@@ -26,16 +26,11 @@ create_phase = fn cases, phase ->
   end
 end
 
-for phase <- [:parse, :render] do
+for phase <- [:parse] do
   time = DateTime.to_string(DateTime.utc_now())
   benchmark = for {level, cases} <- levels_map, into: %{} do
     {"#{level} #{phase}", create_phase.(cases, phase)}
   end
 
-  Benchee.run(benchmark, warmup: 5, time: 60,
-    formatters: [
-      Benchee.Formatters.CSV,
-      Benchee.Formatters.Console
-    ],
-    formatter_options: [csv: [file: "bench/results/#{phase}-#{time}.csv"]])
+  Benchee.run(benchmark, warmup: 5, time: 60)
 end
