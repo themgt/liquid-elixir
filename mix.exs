@@ -5,7 +5,7 @@ defmodule Liquid.Mixfile do
     [
       app: :liquid,
       version: "0.9.1",
-      elixir: "~> 1.5",
+      elixir: "~> 1.6",
       deps: deps(),
       name: "Liquid",
       description: description(),
