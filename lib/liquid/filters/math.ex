@@ -2,7 +2,7 @@ defmodule Liquid.Filters.Math do
   @moduledoc """
   Applies a chain of 'Math' filters passed from Liquid.Variable
   """
-  import Kernel, except: [round: 1, abs: 1]
+  import Kernel, except: [round: 1, abs: 1, floor: 1, ceil: 1]
   import Liquid.Utils, only: [to_number: 1]
 
   @doc """
