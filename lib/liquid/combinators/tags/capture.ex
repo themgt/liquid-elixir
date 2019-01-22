@@ -11,7 +11,7 @@ defmodule Liquid.Combinators.Tags.Capture do
   Capture is useful for saving content for use later in your template, such as in a sidebar or footer.
   """
   import NimbleParsec
-  alias Liquid.Combinators.Tag
+  alias Liquid.Combinators.{Tag, General}
 
   @type t :: [capture: Capture.markup()]
 
@@ -29,8 +29,8 @@ defmodule Liquid.Combinators.Tags.Capture do
   def tag do
     Tag.define_block("capture", fn combinator ->
       choice(combinator, [
-        parsec(:quoted_variable_name),
-        parsec(:variable_name)
+        General.quoted_variable_name(),
+        General.variable_name()
       ])
     end)
   end

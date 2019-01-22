@@ -6,7 +6,6 @@ defmodule Liquid.Combinators.GeneralTest do
     import NimbleParsec
     alias Liquid.Combinators.{General, LexicalToken}
     defparsec(:whitespace, General.whitespace())
-    defparsec(:liquid_literal, General.liquid_literal())
     defparsec(:ignore_whitespaces, General.ignore_whitespaces())
     defparsec(:start_tag, General.start_tag())
     defparsec(:end_tag, General.end_tag())
@@ -19,6 +18,7 @@ defmodule Liquid.Combinators.GeneralTest do
     defparsec(:filter, General.filter())
     defparsec(:filter_param, General.filter_param())
     defparsec(:filters, General.filters())
+    defparsec(:liquid_variable, General.liquid_variable())
     defparsec(:value, LexicalToken.value())
     defparsec(:value_definition, LexicalToken.value_definition())
     defparsec(:object_property, LexicalToken.object_property())
@@ -32,18 +32,6 @@ defmodule Liquid.Combinators.GeneralTest do
     test_combinator("\t", &Parser.whitespace/1, '\t')
     test_combinator("\n", &Parser.whitespace/1, '\n')
     test_combinator("\r", &Parser.whitespace/1, '\r')
-  end
-
-  test "literal: every utf8 valid character until open/close tag/variable" do
-    test_combinator("Chinese: 你好, English: Whatever, Arabian: مرحبا", &Parser.liquid_literal/1, [
-      "Chinese: 你好, English: Whatever, Arabian: مرحبا"
-    ])
-
-    test_combinator("stop in {{", &Parser.liquid_literal/1, ["stop in "])
-    test_combinator("stop in {%", &Parser.liquid_literal/1, ["stop in "])
-    test_combinator("stop in %}", &Parser.liquid_literal/1, ["stop in %}"])
-    test_combinator("stop in }}", &Parser.liquid_literal/1, ["stop in }}"])
-    test_combinator_internal_error("{{ this is not processed", &Parser.liquid_literal/1)
   end
 
   test "extra_spaces ignore all :whitespaces" do
@@ -86,6 +74,31 @@ defmodule Liquid.Combinators.GeneralTest do
     Enum.each(invalid_names, fn n ->
       test_combinator_internal_error(n, &Parser.variable_name/1)
     end)
+  end
+
+  test "variable with filters and params" do
+    test_combinator(
+      "{{ var.var1[0][0].var2[3] | filter1 | f2: 1 | f3: 2 | f4: 2, 3 }}",
+      &Parser.liquid_variable/1,
+      liquid_variable: [
+        variable: [
+          parts: [
+            part: "var",
+            part: "var1",
+            index: 0,
+            index: 0,
+            part: "var2",
+            index: 3
+          ],
+          filters: [
+            filter: ["filter1"],
+            filter: ["f2", {:params, [value: 1]}],
+            filter: ["f3", {:params, [value: 2]}],
+            filter: ["f4", {:params, [value: 2, value: 3]}]
+          ]
+        ]
+      ]
+    )
   end
 
   defp test_combinator_internal_error(markup, combiner) do

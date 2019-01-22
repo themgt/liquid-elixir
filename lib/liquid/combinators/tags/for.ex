@@ -48,7 +48,7 @@ defmodule Liquid.Combinators.Tags.For do
   ```
   """
   import NimbleParsec
-  alias Liquid.Combinators.{General, Tag}
+  alias Liquid.Combinators.{General, Tag, LexicalToken}
   alias Liquid.Combinators.Tags.Generic
 
   @type t :: [for: For.markup()]
@@ -90,21 +90,21 @@ defmodule Liquid.Combinators.Tags.For do
 
   defp statements(combinator) do
     combinator
-    |> parsec(:variable_value)
-    |> parsec(:ignore_whitespaces)
+    |> concat(LexicalToken.variable_value())
+    |> concat(General.ignore_whitespaces())
     |> ignore(string("in"))
-    |> parsec(:ignore_whitespaces)
-    |> parsec(:value)
+    |> concat(General.ignore_whitespaces())
+    |> concat(LexicalToken.value())
     |> optional(params())
-    |> parsec(:ignore_whitespaces)
+    |> concat(General.ignore_whitespaces())
     |> tag(:statements)
   end
 
   defp reversed_param do
     empty()
-    |> parsec(:ignore_whitespaces)
+    |> concat(General.ignore_whitespaces())
     |> ignore(string("reversed"))
-    |> parsec(:ignore_whitespaces)
+    |> concat(General.ignore_whitespaces())
     |> tag(:reversed)
   end
 

@@ -7,12 +7,11 @@ defmodule Liquid.Combinators.Tags.EndBlock do
   import NimbleParsec
 
   def tag do
-    empty()
-    |> parsec(:start_tag)
+    General.start_tag()
     |> ignore(string("end"))
     |> concat(General.valid_tag_name())
     |> tag(:tag_name)
-    |> parsec(:end_tag)
+    |> concat(General.end_tag())
     |> tag(:end_block)
   end
 end

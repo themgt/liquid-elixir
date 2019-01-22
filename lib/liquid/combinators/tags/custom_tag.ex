@@ -23,11 +23,10 @@ defmodule Liquid.Combinators.Tags.CustomTag do
   """
   @spec tag() :: NimbleParsec.t()
   def tag do
-    empty()
-    |> parsec(:start_tag)
+    General.start_tag()
     |> concat(General.valid_tag_name())
     |> optional(markup())
-    |> parsec(:end_tag)
+    |> concat(General.end_tag())
     |> traverse({__MODULE__, :check_customs, []})
   end
 
@@ -54,7 +53,7 @@ defmodule Liquid.Combinators.Tags.CustomTag do
 
   defp markup do
     empty()
-    |> parsec(:ignore_whitespaces)
+    |> concat(General.ignore_whitespaces())
     |> concat(valid_markup())
     |> reduce({List, :to_string, []})
     |> unwrap_and_tag(:custom_markup)

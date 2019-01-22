@@ -160,7 +160,7 @@ defmodule Liquid.Combinators.General do
       string(@less_than),
       string("contains")
     ])
-    |> traverse({__MODULE__, :to_atom, []})
+    |> map({String, :to_atom, []})
   end
 
   @doc """
@@ -174,7 +174,7 @@ defmodule Liquid.Combinators.General do
       string("and"),
       string(",") |> replace("or")
     ])
-    |> traverse({__MODULE__, :to_atom, []})
+    |> map({String, :to_atom, []})
   end
 
   def condition do
@@ -187,26 +187,10 @@ defmodule Liquid.Combinators.General do
   end
 
   def logical_condition do
-    parsec(:logical_operators)
+    logical_operators()
     |> choice([parsec(:condition), parsec(:value_definition)])
     |> tag(:logical)
   end
-
-  @doc """
-  All utf8 valid characters or empty limited by start/end of tag/variable
-  """
-  def liquid_literal do
-    empty()
-    |> repeat_until(utf8_char([]), [
-      string(@start_variable),
-      string(@start_tag)
-    ])
-    |> reduce({List, :to_string, []})
-    |> traverse({Liquid.Combinators.General, :check_empty, []})
-  end
-
-  def check_empty(_rest, [""], _context, _line, _offset), do: {:error, "Not a valid literal"}
-  def check_empty(_rest, args, context, _line, _offset), do: {args, context}
 
   @doc """
   All utf8 valid characters or empty limited by start of tag
@@ -262,11 +246,11 @@ defmodule Liquid.Combinators.General do
   end
 
   def quoted_variable_name do
-    parsec(:ignore_whitespaces)
+    ignore_whitespaces()
     |> ignore(utf8_char([@single_quote]))
     |> parsec(:variable_definition)
     |> ignore(utf8_char([@single_quote]))
-    |> parsec(:ignore_whitespaces)
+    |> concat(ignore_whitespaces())
     |> unwrap_and_tag(:variable_name)
   end
 
@@ -291,21 +275,21 @@ defmodule Liquid.Combinators.General do
   end
 
   def single_quoted_token do
-    parsec(:ignore_whitespaces)
+    ignore_whitespaces()
     |> concat(utf8_char([@single_quote]))
     |> concat(repeat(utf8_char(not: @comma, not: @single_quote)))
     |> concat(utf8_char([@single_quote]))
     |> reduce({List, :to_string, []})
-    |> concat(parsec(:ignore_whitespaces))
+    |> concat(ignore_whitespaces())
   end
 
   def double_quoted_token do
-    parsec(:ignore_whitespaces)
+    ignore_whitespaces()
     |> concat(utf8_char([@double_quote]))
     |> concat(repeat(utf8_char(not: @comma, not: @double_quote)))
     |> concat(utf8_char([@double_quote]))
     |> reduce({List, :to_string, []})
-    |> concat(parsec(:ignore_whitespaces))
+    |> concat(ignore_whitespaces())
   end
 
   def quoted_token do
@@ -319,16 +303,17 @@ defmodule Liquid.Combinators.General do
   def filter_param do
     empty()
     |> optional(ignore(utf8_char([@colon])))
-    |> parsec(:ignore_whitespaces)
+    |> concat(ignore_whitespaces())
     |> parsec(:value)
     |> optional(ignore(utf8_char([@comma])))
-    |> optional(parsec(:ignore_whitespaces))
+    |> optional(ignore_whitespaces())
     |> optional(parsec(:value))
     |> tag(:params)
   end
 
   def filters do
-    times(parsec(:filter), min: 1)
+    filter()
+    |> times(min: 1)
     |> tag(:filters)
   end
 
@@ -337,25 +322,19 @@ defmodule Liquid.Combinators.General do
   start char: ':' plus optional: parameters values [value]
   """
   def filter do
-    parsec(:ignore_whitespaces)
+    ignore_whitespaces()
     |> ignore(string(@start_filter))
-    |> parsec(:ignore_whitespaces)
+    |> concat(ignore_whitespaces())
     |> utf8_string(
       [not: @colon, not: @vertical_line, not: @rigth_curly_bracket, not: @space],
       min: 1
     )
-    |> parsec(:ignore_whitespaces)
+    |> concat(ignore_whitespaces())
     |> reduce({List, :to_string, []})
-    |> optional(parsec(:filter_param))
+    |> optional(filter_param())
     |> tag(:filter)
     |> optional(parsec(:filter))
   end
-
-  @doc """
-  Helper for traverse combinator. Transforms first element in `acc` from string to atom
-  """
-  @spec to_atom(binary(), list(), list(), integer(), integer()) :: tuple()
-  def to_atom(_rest, [h | t], context, _line, _offset), do: {[String.to_atom(h) | t], context}
 
   @doc """
   Parse and ignore an assign symbol
@@ -364,18 +343,18 @@ defmodule Liquid.Combinators.General do
     empty()
     |> optional(cleaned_comma())
     |> parsec(:variable_name)
-    |> ignore(utf8_string([symbol], max: 1))
+    |> ignore(utf8_char([symbol]))
     |> parsec(:value)
   end
 
   def tag_param(name) do
     empty()
-    |> parsec(:ignore_whitespaces)
+    |> concat(ignore_whitespaces())
     |> ignore(string(name))
     |> ignore(ascii_char([@colon]))
-    |> parsec(:ignore_whitespaces)
+    |> concat(ignore_whitespaces())
     |> choice([parsec(:number), parsec(:variable_definition)])
-    |> parsec(:ignore_whitespaces)
+    |> concat(ignore_whitespaces())
     |> tag(String.to_atom(name))
   end
 
