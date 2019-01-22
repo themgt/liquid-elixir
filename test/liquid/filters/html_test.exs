@@ -26,6 +26,11 @@ defmodule Liquid.Filters.HTMLTest do
     assert nil == HTML.url_encode(nil)
   end
 
+  test :url_decode do
+    assert "foo+1@example.com" == HTML.url_decode("foo%2B1%40example.com")
+    assert nil == HTML.url_decode(nil)
+  end
+
   test :strip_html do
     assert "test" == HTML.strip_html("<div>test</div>")
     assert "test" == HTML.strip_html(~s{<div id="test">test</div>})
