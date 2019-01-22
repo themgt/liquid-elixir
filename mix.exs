@@ -4,8 +4,8 @@ defmodule Liquid.Mixfile do
   def project do
     [
       app: :liquid,
-      version: "0.8.0",
-      elixir: "~> 1.3",
+      version: "0.9.1",
+      elixir: "~> 1.5",
       deps: deps(),
       name: "Liquid",
       description: description(),
@@ -30,14 +30,14 @@ defmodule Liquid.Mixfile do
   # { :foobar, "0.1", git: "https://github.com/elixir-lang/foobar.git" }
   defp deps do
     [
-      {:credo, "~> 0.9.0", only: [:dev, :test]},
+      {:credo, "~> 0.9.0 or ~> 1.0", only: [:dev, :test]},
       {:benchee, "~> 0.13", only: :dev},
       {:benchee_csv, "~> 0.7", only: :dev},
-      {:benchfella, "~> 0.3.0", only: [:dev, :test]},
+      {:benchfella, "~> 0.3", only: [:dev, :test]},
       {:timex, "~> 3.0"},
       {:excoveralls, "~> 0.10.1", only: :test},
       {:nimble_parsec, "~> 0.4.0"},
-      {:poison, "~> 3.1", only: [:dev, :test]},
+      {:jason, "~> 1.1", only: [:dev, :test]},
       {:ex_doc, ">= 0.0.0", only: :dev}
     ]
   end

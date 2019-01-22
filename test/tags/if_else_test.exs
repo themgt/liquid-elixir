@@ -1,5 +1,6 @@
-defmodule IfElseTagTest do
+defmodule Liquid.Tags.IfElseTagTest do
   use ExUnit.Case
+
   alias Liquid.Template, as: Template
 
   setup_all do
@@ -66,6 +67,23 @@ defmodule IfElseTagTest do
       "a" => true,
       "b" => true
     })
+
+    assert_result(
+      " YES ",
+      "{% if a == false and b == false and c == false  %} YES {% endif %}",
+      %{
+        "a" => false,
+        "b" => false,
+        "c" => false
+      }
+    )
+
+    template_body = """
+      {% if v1 == 1 and v2 == 2 and v3 == 3 %} Hello {% endif %}
+    """
+
+    assert_result("  \n", template_body, %{"v1" => 2, "v2" => 2, "v3" => 3})
+    assert_result("   Hello \n", template_body, %{"v1" => 1, "v2" => 2, "v3" => 3})
   end
 
   test :comparison_of_strings_containing_and_or_or do
