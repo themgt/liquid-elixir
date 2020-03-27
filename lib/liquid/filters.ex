@@ -392,6 +392,8 @@ defmodule Liquid.Filters do
 
     def slice(nil, _), do: ""
 
+    def escape(nil), do: ""
+
     def escape(input) when is_binary(input) do
       input |> HTML.html_escape()
     end
